@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 const initialCustomers = [
   { id: 1, name: "田中 花子", address: "東京都渋谷区代々木1-2-3", product: "ワイヤレスイヤホン", price: 3800, comment: "梱包も丁寧で大変満足！またお願いしたいです。" },
@@ -28,14 +28,29 @@ const inputStyle = {
 };
 
 export default function App() {
-  const [customers, setCustomers] = useState(initialCustomers);
+  const [customers, setCustomers] = useState(() => {
+    try {
+      const saved = localStorage.getItem("mercari-customers");
+      return saved ? JSON.parse(saved) : initialCustomers;
+    } catch { return initialCustomers; }
+  });
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editData, setEditData] = useState(EMPTY);
   const [isEdit, setIsEdit] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
-  const nextId = useRef(5);
+  const nextId = useRef(() => {
+    try {
+      const saved = localStorage.getItem("mercari-customers");
+      const list = saved ? JSON.parse(saved) : initialCustomers;
+      return list.length > 0 ? Math.max(...list.map(c => c.id)) + 1 : 1;
+    } catch { return 5; }
+  });
+
+  useEffect(() => {
+    localStorage.setItem("mercari-customers", JSON.stringify(customers));
+  }, [customers]);
 
   const set = (key) => (e) => setEditData(d => ({ ...d, [key]: e.target.value }));
 
